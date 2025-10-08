@@ -21,7 +21,10 @@ runs:
 
     - name: Validate payload
       shell: bash
-      run: npx ajv-cli validate -s "$SCHEMA" -d "$PAYLOAD"
+      run: |
+        TEMP_FILE=$(mktemp)
+        echo "${PAYLOAD}" > "$TEMP_FILE"
+        npx ajv-cli validate -s "$SCHEMA" -d "$TEMP_FILE"
       env:
         SCHEMA: ${{ github.action_path }}/schema/${{ inputs.event-type }}.json
         PAYLOAD: ${{ inputs.payload }}
