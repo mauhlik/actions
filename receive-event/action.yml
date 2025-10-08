@@ -34,7 +34,7 @@ runs:
         jq '.payload' "$PAYLOAD_FILE" > "$TEMP_FILE"
         echo "file=$TEMP_FILE" >> $GITHUB_OUTPUT
       env:
-        PAYLOAD_FILE: ${{ steps.payload-file.outputs.file }}
+        PAYLOAD_FILE: ${{ steps.event-file.outputs.file }}
 
     - name: Validate payload
       shell: bash
