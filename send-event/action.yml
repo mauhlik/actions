@@ -19,15 +19,21 @@ runs:
       shell: bash
       run: npm install ajv-cli
 
+    - name: Create temporary payload file
+      shell: bash
+      id: payload-file
+      run: |
+        TEMP_FILE=$(mktemp /tmp/payload-XXXXXX.json)
+        echo "$PAYLOAD" > "$TEMP_FILE"
+        echo "file=$TEMP_FILE" >> $GITHUB_OUTPUT
+
     - name: Validate payload
       shell: bash
       run: |
-        TEMP_FILE=$(mktemp)
-        echo "${PAYLOAD}" > "$TEMP_FILE"
-        npx ajv-cli validate -s "$SCHEMA" -d "$TEMP_FILE"
+        npx ajv-cli validate -s "$SCHEMA" -d "$PAYLOAD_FILE"
       env:
         SCHEMA: ${{ github.action_path }}/schema/${{ inputs.event-type }}.json
-        PAYLOAD: ${{ inputs.payload }}
+        PAYLOAD_FILE: ${{ steps.payload-file.outputs.file }}
 
     - name: Send repository dispatch event
       uses: ./../repository-dispatch
