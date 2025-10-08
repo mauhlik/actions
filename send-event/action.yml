@@ -61,5 +61,7 @@ runs:
     - name: Send repository dispatch event
       uses: mauhlik/actions/repository-dispatch@event-actions
       with:
-        ${{ insert }}: ${{ inputs }}
+        event-type: ${{ inputs.event-type }}
         payload: ${{ steps.enrich-payload.outputs.content }}
+        repository: ${{ inputs.repository }}
+        
