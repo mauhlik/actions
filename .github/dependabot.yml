@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: "github-actions"
     directories:
       - "/"
-      - repository-dispatch
+      - "repository-dispatch"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
