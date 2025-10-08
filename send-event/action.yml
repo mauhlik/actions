@@ -17,12 +17,15 @@ runs:
   steps:
     - name: Install ajv-cli
       shell: bash
-      run: npm install ajv-cli
+      run: | 
+        # Install ajv-cli for JSON schema validation
+        npm install ajv-cli
 
     - name: Create temporary payload file
       shell: bash
       id: payload-file
       run: |
+        # Create a temporary file to hold the payload
         TEMP_FILE=$(mktemp /tmp/payload-XXXXXX.json)
         echo "$PAYLOAD" > "$TEMP_FILE"
         echo "file=$TEMP_FILE" >> $GITHUB_OUTPUT
@@ -32,6 +35,7 @@ runs:
     - name: Validate payload
       shell: bash
       run: |
+        # Validate the payload against the schema for the given event type
         npx ajv-cli validate -s "$SCHEMA" -d "$PAYLOAD_FILE"
       env:
         SCHEMA: ${{ github.action_path }}/schema/${{ inputs.event-type }}.json
@@ -50,8 +54,7 @@ runs:
           --slurpfile orig "$PAYLOAD_FILE" \
           '{ "context": { "repository": $repo, "ref": $ref, "sha": $sha, "actor": $actor }, payload: $orig[0] }' \
           "$PAYLOAD_FILE" > "$PAYLOAD_FILE.enriched"
-          ENRICHED_PAYLOAD=$(cat "$PAYLOAD_FILE.enriched")
-          echo "content=$ENRICHED_PAYLOAD" >> $GITHUB_OUTPUT
+          echo "content=$(jq -c . < $PAYLOAD_FILE.enriched)" >> $GITHUB_OUTPUT
       env:
         PAYLOAD_FILE: ${{ steps.payload-file.outputs.file }}
 
