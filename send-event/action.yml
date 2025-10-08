@@ -26,6 +26,8 @@ runs:
         TEMP_FILE=$(mktemp /tmp/payload-XXXXXX.json)
         echo "$PAYLOAD" > "$TEMP_FILE"
         echo "file=$TEMP_FILE" >> $GITHUB_OUTPUT
+      env:
+        PAYLOAD: ${{ inputs.payload }}
 
     - name: Validate payload
       shell: bash
