@@ -37,7 +37,26 @@ runs:
         SCHEMA: ${{ github.action_path }}/schema/${{ inputs.event-type }}.json
         PAYLOAD_FILE: ${{ steps.payload-file.outputs.file }}
 
+    - name: Enrich payload with repo info
+      shell: bash
+      id: enrich-payload
+      run: |
+        # Enrich the payload with repository context information
+        jq \
+          --arg repo "$GITHUB_REPOSITORY" \
+          --arg ref "$GITHUB_REF" \
+          --arg sha "$GITHUB_SHA" \
+          --arg actor "$GITHUB_ACTOR" \
+          --slurpfile orig "$PAYLOAD_FILE" \
+          '{ "context": { "repository": $repo, "ref": $ref, "sha": $sha, "actor": $actor }, payload: $orig[0] }' \
+          "$PAYLOAD_FILE" > "$PAYLOAD_FILE.enriched"
+          ENRICHED_PAYLOAD=$(cat "$PAYLOAD_FILE.enriched")
+          echo "content=$ENRICHED_PAYLOAD" >> $GITHUB_OUTPUT
+      env:
+        PAYLOAD_FILE: ${{ steps.payload-file.outputs.file }}
+
     - name: Send repository dispatch event
       uses: mauhlik/actions/repository-dispatch@event-actions
       with:
         ${{ insert }}: ${{ inputs }}
+        payload: ${{ steps.enrich-payload.outputs.content }}
