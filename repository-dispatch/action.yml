@@ -24,11 +24,11 @@ runs:
       with:
         script: |
           const eventType = process.env.EVENT_TYPE;
-          const payload = process.env.PAYLOAD;
+          const payloadInput = process.env.PAYLOAD;
 
           const repository = process.env.REPOSITORY;
 
-          const payload = payload ? JSON.parse(payload) : undefined;
+          const payload = payloadInput ? JSON.parse(payloadInput) : undefined;
 
           await github.rest.repos.createDispatchEvent({
             owner: context.repo.owner,
