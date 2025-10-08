@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Pong Event",
+  "title": "Ping Event",
   "type": "object",
   "properties": {
     "message": {
       "type": "string",
-      "description": "The message to send in the pong event."
+      "description": "The message to send in the ping event."
     }
   },
   "required": ["message"],
