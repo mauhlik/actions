@@ -23,7 +23,7 @@ runs:
         echo "$PAYLOAD" > "$TEMP_FILE"
         echo "file=$TEMP_FILE" >> $GITHUB_OUTPUT
       env:
-        PAYLOAD: ${{ github.event.client_payload | toJson }}
+        PAYLOAD: ${{ toJson(github.event.client_payload) }}
 
     - name: Validate payload
       shell: bash
