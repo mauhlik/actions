@@ -1,0 +1,32 @@
+name: 'Send Event'
+description: 'Sends a custom event to a repository'
+inputs:
+  event-type:
+    description: 'The event type to send'
+    required: true
+    default: 'custom-event'
+  payload:
+    description: 'The payload to send'
+    required: false
+  repository:
+    description: 'The repository to send the event to (defaults to the current repository)'
+    required: false
+    default: ${{ github.repository }}
+runs:
+  using: "composite"
+  steps:
+    - name: Install ajv-cli
+      shell: bash
+      run: npm install ajv-cli
+
+    - name: Validate payload
+      shell: bash
+      run: npx ajv-cli validate -s "$SCHEMA" -d "$PAYLOAD"
+      env:
+        SCHEMA: ${{ github.action_path }}/schema/${{ inputs.event-type }}.json
+        PAYLOAD: ${{ inputs.payload }}
+
+    - name: Send repository dispatch event
+      uses: ./../repository-dispatch
+      with:
+        ${{ insert }}: ${{ inputs }}

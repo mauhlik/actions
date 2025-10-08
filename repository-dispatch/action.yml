@@ -5,8 +5,8 @@ inputs:
     description: 'The event type to send'
     required: true
     default: 'custom-event'
-  client-payload:
-    description: 'The client payload to send'
+  payload:
+    description: 'The payload to send'
     required: false
   repository:
     description: 'The repository to send the event to (defaults to the current repository)'
@@ -19,16 +19,16 @@ runs:
       uses: actions/github-script@v8
       env:
         EVENT_TYPE: ${{ inputs.event-type }}
-        CLIENT_PAYLOAD: ${{ inputs.client-payload }}
+        PAYLOAD: ${{ inputs.payload }}
         REPOSITORY: ${{ inputs.repository }}
       with:
         script: |
           const eventType = process.env.EVENT_TYPE;
-          const clientPayload = process.env.CLIENT_PAYLOAD;
+          const payload = process.env.PAYLOAD;
 
           const repository = process.env.REPOSITORY;
 
-          const payload = clientPayload ? JSON.parse(clientPayload) : undefined;
+          const payload = payload ? JSON.parse(payload) : undefined;
 
           await github.rest.repos.createDispatchEvent({
             owner: context.repo.owner,
