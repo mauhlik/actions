@@ -38,6 +38,6 @@ runs:
         PAYLOAD_FILE: ${{ steps.payload-file.outputs.file }}
 
     - name: Send repository dispatch event
-      uses: ./../repository-dispatch
+      uses: mauhlik/actions/repository-dispatch@event-actions
       with:
         ${{ insert }}: ${{ inputs }}
