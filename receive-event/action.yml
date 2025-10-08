@@ -14,16 +14,27 @@ runs:
         # Install ajv-cli for JSON schema validation
         npm install ajv-cli
 
-    - name: Create temporary payload file
+    - name: Create event file
       shell: bash
-      id: payload-file
+      id: event-file
       run: |
-        # Create a temporary file to hold the payload
-        TEMP_FILE=$(mktemp /tmp/payload-XXXXXX.json)
+        # Create a file to hold the event payload
+        TEMP_FILE=$(mktemp /tmp/event-XXXXXX.json)
         echo "$PAYLOAD" > "$TEMP_FILE"
         echo "file=$TEMP_FILE" >> $GITHUB_OUTPUT
       env:
         PAYLOAD: ${{ toJson(github.event.client_payload) }}
+
+    - name: Create payload file
+      shell: bash
+      id: payload-file
+      run: |
+        # Create a file to hold the payload extracted from the event
+        TEMP_FILE=$(mktemp /tmp/payload-XXXXXX.json)
+        jq '.payload' "$PAYLOAD_FILE" > "$TEMP_FILE"
+        echo "file=$TEMP_FILE" >> $GITHUB_OUTPUT
+      env:
+        PAYLOAD_FILE: ${{ steps.payload-file.outputs.file }}
 
     - name: Validate payload
       shell: bash
