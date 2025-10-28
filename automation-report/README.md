@@ -4,6 +4,8 @@
 
 jobs:
   run:
+    permissions:
+      id-token: write
     ...
     steps:
       - name: Report State
