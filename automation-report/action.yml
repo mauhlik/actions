@@ -43,6 +43,13 @@ runs:
         # Post report
         MAX_RETRIES=5
         RETRY_DELAY=5
+
+        # Check if report file exists
+        if [ ! -f "$REPORT_FILE" ]; then
+          echo "::errorr::Report file does not exist."
+          exit 1
+        fi
+
         for i in $(seq 1 $MAX_RETRIES); do
           curl -sSf -X POST "$CALLBACK_URL" \
             -H "Content-Type: application/json" \
