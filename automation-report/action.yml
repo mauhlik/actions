@@ -1,0 +1,58 @@
+name: Automation Report State
+description: 'Send Automation Report State'
+inputs:
+  callback-url:
+    description: 'The callback URL to send the report to'
+    required: true
+  status:
+    description: 'The status of the automation (e.g., success, failure)'
+    required: false
+    default: ${{ job.status }}
+  data:
+    description: 'The report data to send'
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare automation report payload
+      shell: bash
+      run: |
+        REPORT_FILE=$(mktemp /tmp/report-XXXXXX.json)
+        jq -n \
+          --arg status "$STATUS" \
+          --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+          --arg repository "$GITHUB_REPOSITORY" \
+          --arg ref "$GITHUB_REF" \
+          --arg data "$DATA" \
+          '{
+            status: $status,
+            timestamp: $timestamp,
+            repository: $repository,
+            ref: $ref,
+            data: ($data | fromjson?)
+          }' > "$REPORT_FILE"
+        echo "file=$REPORT_FILE" >> $GITHUB_OUTPUT
+      env:
+        STATUS: ${{ inputs.status }}
+        DATA: ${{ inputs.data }}
+
+    - name: Report state of workflow
+      shell: bash
+      run: |
+        # Post report
+        MAX_RETRIES=5
+        RETRY_DELAY=5
+        for i in $(seq 1 $MAX_RETRIES); do
+          curl -sSf -X POST "$CALLBACK_URL" \
+            -H "Content-Type: application/json" \
+            --data-binary "@$REPORT_FILE" && break
+          echo "POST attempt $i failed. Retrying in $RETRY_DELAY seconds..."
+          sleep $RETRY_DELAY
+        done
+        if [ $i -eq $MAX_RETRIES ]; then
+          echo "POST failed after $MAX_RETRIES attempts."
+          exit 1
+        fi
+      env:
+        CALLBACK_URL: ${{ inputs.callback-url }}
+        REPORT_FILE: ${{ steps.prepare-automation-report-payload.outputs.file }}
