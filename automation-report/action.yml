@@ -16,6 +16,7 @@ runs:
   steps:
     - name: Prepare automation report payload
       shell: bash
+      id: prepare-automation-report-payload
       run: |
         REPORT_FILE=$(mktemp /tmp/report-XXXXXX.json)
         jq -n \
