@@ -46,6 +46,13 @@ runs:
         echo "::add-mask::$TOKEN"
         echo "token=$TOKEN" >> $GITHUB_OUTPUT
         
+    - name: Print report file
+      if: ${{ runner.debug }}
+      run: |
+        # Print report file for debug purposes
+        cat "$REPORT_FILE"
+      env:
+        REPORT_FILE: ${{ steps.prepare-automation-report-payload.outputs.file }}
 
     - name: Report state of workflow
       shell: bash
