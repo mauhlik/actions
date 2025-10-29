@@ -14,6 +14,15 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Get JWT Token
+      id: get-jwt-token
+      shell: bash
+      run: |
+        # Get JWT token for authentication
+        TOKEN=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL")
+        echo "::add-mask::$TOKEN"
+        echo "token=$TOKEN" >> $GITHUB_OUTPUT
+
     - name: Prepare automation report payload
       shell: bash
       id: prepare-automation-report-payload
@@ -36,15 +45,6 @@ runs:
       env:
         STATUS: ${{ inputs.status }}
         DATA: ${{ inputs.data }}
-
-    - name: Get JWT Token
-      id: get-jwt-token
-      shell: bash
-      run: |
-        # Get JWT token for authentication
-        TOKEN=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL")
-        echo "::add-mask::$TOKEN"
-        echo "token=$TOKEN" >> $GITHUB_OUTPUT
         
     - name: Print report file
       if: ${{ runner.debug }}
@@ -90,3 +90,4 @@ runs:
       env:
         CALLBACK_URL: ${{ inputs.callback-url }}
         REPORT_FILE: ${{ steps.prepare-automation-report-payload.outputs.file }}
+        TOKEN: ${{ steps.get-jwt-token.outputs.token }}
