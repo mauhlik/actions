@@ -19,7 +19,8 @@ runs:
       shell: bash
       run: |
         # Get JWT token for authentication
-        TOKEN=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL")
+        TOKEN_REQ=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL")
+        TOKEN=$(echo "$TOKEN_REQ" | jq -r '.value')
         echo "::add-mask::$TOKEN"
         echo "token=$TOKEN" >> $GITHUB_OUTPUT
 
