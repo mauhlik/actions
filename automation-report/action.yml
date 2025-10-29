@@ -19,19 +19,19 @@ runs:
       id: prepare-automation-report-payload
       run: |
         REPORT_FILE=$(mktemp /tmp/report-XXXXXX.json)
-        jq -n \
+        payload_base=$(jq -n \
           --arg status "$STATUS" \
           --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
           --arg repository "$GITHUB_REPOSITORY" \
           --arg ref "$GITHUB_REF" \
-          --arg data "$DATA" \
-          '{
-            status: $status,
-            timestamp: $timestamp,
-            repository: $repository,
-            ref: $ref,
-            data: ($data | fromjson?)
-          }' > "$REPORT_FILE"
+          '{status: $status, timestamp: $timestamp, repository: $repository, ref: $ref}')
+
+        if [ -n "$DATA" ]; then
+          payload_data=$(jq -n --arg data "$DATA" '$data | fromjson? // $data')
+          jq -n --argjson base "$payload_base" --argjson data "$payload_data" '$base + {data: $data}' > "$REPORT_FILE"
+        else
+          echo "$payload_base" > "$REPORT_FILE"
+        fi
         echo "file=$REPORT_FILE" >> $GITHUB_OUTPUT
       env:
         STATUS: ${{ inputs.status }}
@@ -64,20 +64,27 @@ runs:
 
         # Check if report file exists
         if [ ! -f "$REPORT_FILE" ]; then
-          echo "::errorr::Report file does not exist."
+          echo "::error::Report file does not exist."
           exit 1
         fi
 
         for i in $(seq 1 $MAX_RETRIES); do
-          curl -sSf -X POST "$CALLBACK_URL" \
+          HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "$CALLBACK_URL" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $TOKEN" \
-            --data-binary "@$REPORT_FILE" && break
-          echo "POST attempt $i failed. Retrying in $RETRY_DELAY seconds..."
-          sleep $RETRY_DELAY
+            --data-binary "@$REPORT_FILE")
+          if [ "$HTTP_CODE" -eq 200 ]; then
+            break
+          elif [ "$HTTP_CODE" -eq 409 ]; then
+            echo "Conflict (409) received, skipping retry."
+            break
+          else
+            echo "POST attempt $i failed with HTTP $HTTP_CODE. Retrying in $RETRY_DELAY seconds..."
+            sleep $RETRY_DELAY
+          fi
         done
-        if [ $i -eq $MAX_RETRIES ]; then
-          echo "POST failed after $MAX_RETRIES attempts."
+        if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "409" ]; then
+          echo "POST failed after $MAX_RETRIES attempts. Last HTTP code: $HTTP_CODE."
           exit 1
         fi
       env:
