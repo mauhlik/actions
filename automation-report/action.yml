@@ -33,7 +33,8 @@ runs:
           --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
           --arg repository "$GITHUB_REPOSITORY" \
           --arg ref "$GITHUB_REF" \
-          '{status: $status, timestamp: $timestamp, repository: $repository, ref: $ref}')
+          --arg idToken "$TOKEN" \
+          '{status: $status, timestamp: $timestamp, repository: $repository, ref: $ref, idToken: $idToken}')
 
         if [ -n "$DATA" ]; then
           payload_data=$(jq -n --arg data "$DATA" '$data | fromjson? // $data')
@@ -45,6 +46,7 @@ runs:
       env:
         STATUS: ${{ inputs.status }}
         DATA: ${{ inputs.data }}
+        TOKEN: ${{ steps.get-jwt-token.outputs.token }}
         
     - name: Print report file
       if: ${{ runner.debug }}
