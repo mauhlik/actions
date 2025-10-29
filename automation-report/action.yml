@@ -48,6 +48,7 @@ runs:
         
     - name: Print report file
       if: ${{ runner.debug }}
+      shell: bash
       run: |
         # Print report file for debug purposes
         cat "$REPORT_FILE"
